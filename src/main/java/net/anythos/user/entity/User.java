@@ -5,13 +5,15 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import javax.persistence.*;
+import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import java.util.Collection;
 import java.util.List;
 
-@Entity
+@Table(name = "users")
 @Getter
 @Setter
+@Entity
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -21,11 +23,12 @@ public class User implements UserDetails {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 	
-	@NotNull
+	@NotEmpty
+	@Column(unique = true, nullable = false)
 	private String username;
-	@NotNull
+	
+	@NotEmpty
 	private String password;
-	private String role;
 	
 	@NotNull
 	@Enumerated(EnumType.STRING)
