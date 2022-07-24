@@ -11,9 +11,11 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
 @EnableWebSecurity
@@ -21,9 +23,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 @RequiredArgsConstructor
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 	
-	private UserDetailsService jwtUserDetailsService;
-	private JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
-	private JwtRequestFilter jwtRequestFilter;
+	private final UserDetailsService jwtUserDetailsService;
+	private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
+	private final JwtRequestFilter jwtRequestFilter;
 	
 	@Bean
 	public PasswordEncoder passwordEncoder() {
@@ -41,8 +43,21 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 	}
 
 	protected void configure (HttpSecurity httpSecurity) throws Exception {
-		//httpSecurity.authorizeRequests()
-	
+		httpSecurity.addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
+		httpSecurity.authorizeRequests()
+				.antMatchers("/anythos/login").permitAll()
+				.antMatchers("/anythos/admin/**").hasRole("ADMIN")
+				.anyRequest().authenticated().and()
+				.exceptionHandling().authenticationEntryPoint(jwtAuthenticationEntryPoint).and()
+				.sessionManagement()
+				.sessionCreationPolicy(SessionCreationPolicy.STATELESS).and()
+				.csrf().disable();
+//				.formLogin()
+//				.loginPage("/anythos/login")
+//				.defaultSuccessUrl("/anythos/home")
+//				.usernameParameter("username")
+//				.passwordParameter("password")
+//				.failureUrl("/anythos/login?error=true").and();
+		
 	}
-
 }

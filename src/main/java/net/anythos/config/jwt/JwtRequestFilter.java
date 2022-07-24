@@ -27,6 +27,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 	
 	@Override
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws ServletException, IOException {
+		
 		final String requestTokenHeader = request.getHeader("Authorization");
 		
 		String username = null;
@@ -34,6 +35,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 		
 		if (requestTokenHeader != null && requestTokenHeader.startsWith("Bearer ")) {
 			jwtToken = requestTokenHeader.substring(7);
+			
 			try {
 				username = jwtTokenUtil.getUsernameFromToken(jwtToken);
 			}
@@ -48,13 +50,15 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 			log.warn("Token does not start with \"Bearer\"");
 		}
 		
-		if (SecurityContextHolder.getContext().getAuthentication() == null) {
+		if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+			
 			UserDetails userDetails = userService.loadUserByUsername(username);
 			
 			if (jwtTokenUtil.validateToken(jwtToken, userDetails)) {
 				UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken =  new UsernamePasswordAuthenticationToken(
 						userDetails, null, userDetails.getAuthorities());
-				usernamePasswordAuthenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+				usernamePasswordAuthenticationToken
+						.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 				SecurityContextHolder.getContext().setAuthentication(usernamePasswordAuthenticationToken);
 			}
 		}
