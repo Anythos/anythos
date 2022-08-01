@@ -1,8 +1,9 @@
-package net.anythos.config.security;
+package net.anythos.security.security_config;
 
 import lombok.RequiredArgsConstructor;
-import net.anythos.config.jwt.JwtAuthenticationEntryPoint;
-import net.anythos.config.jwt.JwtRequestFilter;
+import net.anythos.security.jwt.JwtAuthenticationEntryPoint;
+//import net.anythos.config.jwt.JwtRequestFilter;
+import net.anythos.security.jwt.JwtRequestFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -19,45 +20,64 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 @Configuration
 @EnableWebSecurity
-@EnableGlobalMethodSecurity(prePostEnabled = true)
+@EnableGlobalMethodSecurity(prePostEnabled = true)      //@PreAuthorize, @PostAuthorize
 @RequiredArgsConstructor
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 	
 	private final UserDetailsService jwtUserDetailsService;
 	private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
-	private final JwtRequestFilter jwtRequestFilter;
+	//private final JwtRequestFilter jwtRequestFilter;
 	
+	@Bean
+	public JwtRequestFilter jwtRequestFilter() {
+		return new JwtRequestFilter();
+	}
 	@Bean
 	public PasswordEncoder passwordEncoder() {
 		return new BCryptPasswordEncoder();
 	}
-	
+
 	@Bean
 	@Override
 	public AuthenticationManager authenticationManagerBean() throws Exception {
 		return super.authenticationManagerBean();
 	}
 	
-	public void configureGlobal(AuthenticationManagerBuilder auth) throws Exception {
-		auth.userDetailsService(jwtUserDetailsService).passwordEncoder(passwordEncoder());
+	@Override
+	protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+		auth
+				.userDetailsService(jwtUserDetailsService)
+				.passwordEncoder(passwordEncoder());
 	}
-
-	protected void configure (HttpSecurity httpSecurity) throws Exception {
-		httpSecurity.addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
-		httpSecurity.authorizeRequests()
-				.antMatchers("/anythos/login").permitAll()
-				.antMatchers("/anythos/admin/**").hasRole("ADMIN")
-				.anyRequest().authenticated().and()
-				.exceptionHandling().authenticationEntryPoint(jwtAuthenticationEntryPoint).and()
+	
+	@Override
+	protected void configure(HttpSecurity httpSecurity) throws Exception {
+		httpSecurity.cors().and().csrf().disable()
+				.exceptionHandling()
+				.authenticationEntryPoint(jwtAuthenticationEntryPoint).and()
 				.sessionManagement()
 				.sessionCreationPolicy(SessionCreationPolicy.STATELESS).and()
-				.csrf().disable();
+				.authorizeRequests()
+				.antMatchers("/anythos/login").permitAll()
+				.antMatchers("/anythos/home/**").hasRole("USER")
+				.antMatchers("/anythos/admin/**").hasRole("ADMIN")
+				.anyRequest().authenticated();
+		
+		httpSecurity.addFilterBefore(jwtRequestFilter(), UsernamePasswordAuthenticationFilter.class);
+		
+//		httpSecurity.csrf()
+//				.ignoringAntMatchers("/**")
+//				.and()
+//				.addFilter(new JwtAuthenticationFilter(authenticationManager()))
+//				.addFilter(new JwtAuthorizationFilter(authenticationManager()));
+
 //				.formLogin()
 //				.loginPage("/anythos/login")
-//				.defaultSuccessUrl("/anythos/home")
+//				.defaultSuccessUrl("/anythos/home").and()
 //				.usernameParameter("username")
 //				.passwordParameter("password")
-//				.failureUrl("/anythos/login?error=true").and();
-		
+//				.failureUrl("/anythos/login?error=true").and()
+//
+//	}
 	}
 }
