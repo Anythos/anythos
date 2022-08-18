@@ -1,7 +1,7 @@
 insert into roles
-VALUES (1,'ROLE_USER'),
-       (2,'ROLE_ADMIN'),
-       (3,'ROLE_MANAGER');
+VALUES (1,'USER'),
+       (2,'ADMIN'),
+       (3,'MANAGER');
 insert into users
 VALUES (1,'54Dumbo', 'ACTIVE', 'mgoreck'),
        (2,'Catalina27', 'ACTIVE', 'bsabala');
