@@ -2,11 +2,11 @@ package net.anythos.security.jwt;
 
 import io.jsonwebtoken.*;
 import lombok.extern.slf4j.Slf4j;
-import net.anythos.user.service.UserDetailsImpl;
+import net.anythos.user.entity.User;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 
+import java.util.Base64;
 import java.util.Date;
 import java.util.function.Function;
 
@@ -14,20 +14,52 @@ import java.util.function.Function;
 @Slf4j
 public class JwtTokenUtil {
 	
-	public static final long JWT_TOKEN_VALIDITY = 5 * 60 * 60;
+	public static final long JWT_TOKEN_VALIDITY = 24 * 60 * 60 * 1000;  //24h
 	
-	@Value("${jwt.secret}")
-	private static String secret;       //private final static String secret = "...."
+	//@Value("${jwt.secret}")
+	private static final String secret = "kronos_secret213";
 	
-	public String getUsernameFromToken(String token) {
-		//return getClaimFromToken(token, Claims::getSubject);
-		return Jwts.parser().setSigningKey(secret).parseClaimsJws(token).getBody().getSubject();
+	//TODO: fix error: Invalid JWT signature: JWT signature does not match locally computed signature. JWT validity cannot be asserted and should not be trusted.
+	public String generateToken(User user) {
+		
+		return Jwts.builder()
+				.setSubject(String.format("%s,%s", user.getId(), user.getUsername()))
+				.setIssuer("Anythos")
+				.claim("roles", user.getRoles().toString())
+				.setIssuedAt(new Date())
+				.setExpiration(new Date(System.currentTimeMillis() + JWT_TOKEN_VALIDITY))
+				.signWith(SignatureAlgorithm.HS512, secret)
+				.compact();
+	}
+	public Boolean validateToken(String token) {
+		try {
+			Jwts.parser().setSigningKey(secret).parseClaimsJws(token);
+			return true;
+		} catch (SignatureException e) {
+			log.error("Invalid JWT signature: {}", e.getMessage());
+		} catch (MalformedJwtException e) {
+			log.error("Invalid JWT token: {}", e.getMessage());
+		} catch (ExpiredJwtException e) {
+			log.error("JWT token is expired: {}", e.getMessage());
+		} catch (UnsupportedJwtException e) {
+			log.error("JWT token is unsupported: {}", e.getMessage());
+		} catch (IllegalArgumentException e) {
+			log.error("JWT token is null or empty: {}", e.getMessage());
+		}
+		return false;
 	}
 	
-	public Date getExpirationDateFromToken(String token) {
-		return getClaimFromToken(token, Claims::getExpiration);
+	public Claims parseClaims(String token) {
+		return Jwts.parser()
+				.setSigningKey(secret)
+				.parseClaimsJws(token)
+				.getBody();
+	}
+	public String getSubjectFromToken(String token) {           //getting username from token
+		return parseClaims(token).getSubject();
 	}
 	
+	//alternative methods to get data from token
 	public <T> T getClaimFromToken(String token, Function<Claims, T> claimsResolver) {
 		final Claims claims = getAllClaimsFromToken(token);
 		return claimsResolver.apply(claims);
@@ -40,15 +72,18 @@ public class JwtTokenUtil {
 				.getBody();
 	}
 	
-	public String generateToken(Authentication authentication) {
-		UserDetailsImpl userPrincipal = (UserDetailsImpl) authentication.getPrincipal();
-		return Jwts.builder()
-				.setSubject((userPrincipal.getUsername()))
-				.setIssuedAt(new Date(System.currentTimeMillis()))
-				.setExpiration(new Date(System.currentTimeMillis() + JWT_TOKEN_VALIDITY * 1000))
-				.signWith(SignatureAlgorithm.HS512, secret)
-				.compact();
+	public String getUsernameFromToken(String token) {
+		//return getClaimFromToken(token, Claims::getSubject);
+		return Jwts.parser().setSigningKey(secret).parseClaimsJws(token).getBody().getSubject();
 	}
+	
+	public Date getExpirationDateFromToken(String token) {
+		return getClaimFromToken(token, Claims::getExpiration);
+	}
+	
+	
+	
+
 	
 //	public static String generateToken(String username, Claims claims) {
 //		return Jwts.builder()
@@ -76,23 +111,7 @@ public class JwtTokenUtil {
 				.signWith(SignatureAlgorithm.HS512, secret)
 				.compact();
 	}
-	public Boolean validateToken(String authToken) {
-		try {
-			Jwts.parser().setSigningKey(secret).parseClaimsJws(authToken);
-			return true;
-		} catch (SignatureException e) {
-			log.error("Invalid JWT signature: {}", e.getMessage());
-		} catch (MalformedJwtException e) {
-			log.error("Invalid JWT token: {}", e.getMessage());
-		} catch (ExpiredJwtException e) {
-			log.error("JWT token is expired: {}", e.getMessage());
-		} catch (UnsupportedJwtException e) {
-			log.error("JWT token is unsupported: {}", e.getMessage());
-		} catch (IllegalArgumentException e) {
-			log.error("JWT claims string is empty: {}", e.getMessage());
-		}
-		return false;
-	}
+
 	
 //	public Boolean validateToken(String token, UserDetails userDetails) {
 //		final String username = getUsernameFromToken(token);
