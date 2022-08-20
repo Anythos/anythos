@@ -1,20 +1,19 @@
 package net.anythos.security.authorization;
 
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 
 @Getter
 @Setter
-@Builder
+@AllArgsConstructor
 public class LoginRequest {
 	
-	@NotEmpty
+	@NotNull
 	private String username;
 	
-	@NotEmpty
+	@NotNull
 	private String password;
 }

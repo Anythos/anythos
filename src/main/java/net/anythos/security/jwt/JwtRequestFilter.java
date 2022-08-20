@@ -1,12 +1,19 @@
 package net.anythos.security.jwt;
 
+import io.jsonwebtoken.Claims;
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import net.anythos.user.entity.Role;
+import net.anythos.user.entity.User;
 import net.anythos.user.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
+import org.springframework.stereotype.Component;
+import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -16,79 +23,86 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
+@Component
 @Slf4j
+@AllArgsConstructor
+@NoArgsConstructor
 public class JwtRequestFilter extends OncePerRequestFilter {
-
-	@Autowired
-	private UserService userService;
 	
 	@Autowired
 	private JwtTokenUtil jwtTokenUtil;
 	
-	public JwtRequestFilter() {
-	}
-	
 	@Override
-	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws ServletException, IOException {
+	protected void doFilterInternal(HttpServletRequest request,
+	                                HttpServletResponse response,
+	                                FilterChain chain) throws ServletException, IOException {
 		
-		try {
-			String jwtToken = parseJwt(request);
-			
-			if (jwtToken != null && jwtTokenUtil.validateToken(jwtToken)) {
-				String username = jwtTokenUtil.getUsernameFromToken(jwtToken);
-				UserDetails userDetails = userService.loadUserByUsername(username);
-				UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-						userDetails, null, userDetails.getAuthorities());
-				authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-				SecurityContextHolder.getContext().setAuthentication(authentication);
-			}
-		} catch (Exception e) {
-			logger.error("Cannot set user authentication: {}", e);
+		if (!hasAuthorizationBearer(request)) {
+			chain.doFilter(request, response);
+			return;
 		}
+		String token = getJwtToken(request);
+		
+		if (!jwtTokenUtil.validateToken(token)) {
+			chain.doFilter(request, response);
+			return;
+		}
+		setAuthenticationContext(token, request);
 		chain.doFilter(request, response);
 	}
-	private String parseJwt(HttpServletRequest request) {
-		String requestTokenHeader = request.getHeader("Authorization");
-		if (StringUtils.hasText(requestTokenHeader) && requestTokenHeader.startsWith("Bearer ")) {
-			return requestTokenHeader.substring(7, requestTokenHeader.length());
+	
+	private UserDetails getUserDetails(String token) {
+		User userDetails = new User();
+		Claims claims = jwtTokenUtil.parseClaims(token);
+		String subject = (String) claims.get(Claims.SUBJECT);
+		String roles = (String) claims.get("roles");
+		
+		System.out.println("SUBJECT: " + subject);
+		System.out.println("roles: " + roles);
+		
+		roles = roles.replace("[", "").replace("]", "");
+		String[] roleNames = roles.split(",");
+		
+		for (String name : roleNames) {
+			userDetails.addRole(new Role(name));
 		}
-		return null;
+		
+		String[] jwtSubject = subject.split(",");
+		
+		userDetails.setId(Long.parseLong(jwtSubject[0]));
+		userDetails.setUsername(jwtSubject[1]);
+		
+		return userDetails;
 	}
 	
-	//getting UserDetails by using SecurityContext
-//	UserDetails userDetails =
-//			(UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+	private void setAuthenticationContext(String token, HttpServletRequest request) {
+		UserDetails userDetails = getUserDetails(token);
+		
+		UsernamePasswordAuthenticationToken authentication =
+				new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+		
+		authentication.setDetails(
+				new WebAuthenticationDetailsSource().buildDetails(request));
+		
+		SecurityContextHolder.getContext().setAuthentication(authentication);
+	}
 	
-
-//		if (requestTokenHeader != null && requestTokenHeader.startsWith("Bearer ")) {
-//			jwtToken = requestTokenHeader.substring(7);
-//
-//			try {
-//				username = jwtTokenUtil.getUsernameFromToken(jwtToken);
-//			}
-//			catch (IllegalArgumentException e) {
-//				log.info("Unable to get token.");
-//			}
-//			catch (ExpiredJwtException e) {
-//				log.info("Token has expired.");
-//			}
+//	private String parseJwt(HttpServletRequest request) {
+//		String requestTokenHeader = request.getHeader("Authorization");
+//		if (StringUtils.hasText(requestTokenHeader) && requestTokenHeader.startsWith("Bearer ")) {
+//			return requestTokenHeader.substring(7, requestTokenHeader.length());
 //		}
-//		else {
-//			log.warn("Token does not start with \"Bearer\"");
-//		}
-//
-//		if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-//
-//			UserDetails userDetails = userService.loadUserByUsername(username);
-//
-//			if (jwtTokenUtil.validateToken(jwtToken, userDetails)) {
-//				UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken =  new UsernamePasswordAuthenticationToken(
-//						userDetails, null, userDetails.getAuthorities());
-//				usernamePasswordAuthenticationToken
-//						.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-//				SecurityContextHolder.getContext().setAuthentication(usernamePasswordAuthenticationToken);
-//			}
-//		}
-//		chain.doFilter(request, response);
+//		return null;
 //	}
+	
+	private String getJwtToken(HttpServletRequest request) {
+		String header = request.getHeader("Authorization");
+		return header.split(" ")[1].trim();     //return jwtToken from Header
+	}
+	
+	private boolean hasAuthorizationBearer(HttpServletRequest request) {
+		String header = request.getHeader("Authorization");
+		return !ObjectUtils.isEmpty(header) && header.startsWith("Bearer");
+	}
 }
+	
