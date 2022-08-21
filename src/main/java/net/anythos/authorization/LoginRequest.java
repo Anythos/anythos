@@ -1,4 +1,4 @@
-package net.anythos.security.authorization;
+package net.anythos.authorization;
 
 import lombok.*;
 
