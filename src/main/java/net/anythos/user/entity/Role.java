@@ -28,9 +28,6 @@ public class Role {
 		this.name = name;
 	}
 	
-	@ManyToMany(mappedBy="roles")
-	private List<User> users = new ArrayList<>();
-	
 	public Role (Integer id) {
 		super();
 		this.id = id;

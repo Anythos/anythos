@@ -34,7 +34,6 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 	@Autowired
 	private UserRepository userRepository;
 	@Autowired
-	//private RoleRepository roleRepository;
 	private RoleService roleService;
 	
 	@Autowired
@@ -62,38 +61,37 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 		httpSecurity.csrf().disable()
 				.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS).and()
 				.authorizeRequests()
-				.mvcMatchers("/anythos/login").permitAll()
+				.mvcMatchers("/home").hasRole("USER")
 				.antMatchers("/anythos/home/**", "/anythos/employee/**").hasRole("USER")
 				.antMatchers("/anythos/admin/**").hasRole("ADMIN")
 				.anyRequest().authenticated();
-//				.and().formLogin()
-//				.loginPage("/anythos/login");
+		
+//		httpSecurity.formLogin()
+//				.loginPage("/login");
+//				.defaultSuccessUrl("/anythos/home")
+//				.usernameParameter("username")
+//				.passwordParameter("password")
+//				.failureUrl("/anythos/login?error=true");
 		
 		httpSecurity.exceptionHandling()
 				.authenticationEntryPoint((request, response, e) ->
 						response.sendError(HttpServletResponse.SC_UNAUTHORIZED, e.getMessage()));
 		
 		httpSecurity.addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
-
-
-//		httpSecurity.csrf()
-//				.ignoringAntMatchers("/**")
-//				.and()
-//				.formLogin()
-//				.loginPage("/anythos/login")
-//				.defaultSuccessUrl("/anythos/home").and()
-//				.usernameParameter("username")
-//				.passwordParameter("password")
-//				.failureUrl("/anythos/login?error=true").and()
-//
-//	}
+		
 	}
 
 	@EventListener(ApplicationReadyEvent.class)
 	public void get() {
-		User user = new User("bartek", passwordEncoder().encode("bartek"), "ACTIVE");
+		User admin = new User("bartek", passwordEncoder().encode("bartek"), "ACTIVE");
+		userRepository.save(admin);
+		roleService.addRoleToUser(admin, "ROLE_ADMIN");
+		userRepository.save(admin);
+		System.out.println(admin.getRoles());
+		
+		User user = new User("kamil", passwordEncoder().encode("kamil"), "ACTIVE");
 		userRepository.save(user);
-		roleService.addRoleToUser(user, "ROLE_ADMIN");
+		roleService.addRoleToUser(user, "ROLE_USER");
 		userRepository.save(user);
 		System.out.println(user.getRoles());
 		}

@@ -16,11 +16,11 @@ public class RoleService {
 	private RoleRepository roleRepository;
 	
 	public void addRoleToUser (User user, String authority) {
-		Set<Role> roles = new HashSet<>();
+		Set <Role> roles = user.getRoles();
 		Role role = roleRepository.findRoleByName(authority);
-		user.addRole(role);
-		roles.add(role);;
+		roles.add(role);
 		user.setRoles(roles);
+		
 		
 		
 	}
