@@ -13,7 +13,7 @@ import javax.validation.Valid;
 
 @Slf4j
 @RestController
-//@RequestMapping("/anythos")
+@RequestMapping("/anythos")
 public class LoginController {
 
     @PostMapping("/login")

@@ -7,7 +7,9 @@ import lombok.Setter;
 
 import javax.persistence.*;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Table(name = "roles")
 @Getter
@@ -27,6 +29,8 @@ public class Role {
 	public Role (String name) {
 		this.name = name;
 	}
+//	@ManyToMany(mappedBy = "roles", cascade = {CascadeType.MERGE, CascadeType.PERSIST})
+//	Set<User> users = new HashSet<>();
 //
 //	public Role (Integer id) {
 //		super();

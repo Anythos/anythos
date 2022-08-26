@@ -1,6 +1,7 @@
 package net.anythos.user.entity;
 
 import lombok.*;
+import org.assertj.core.util.diff.Delta;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -34,7 +35,7 @@ public class User{
 	@NotNull
 	private boolean active;
 	
-	@ManyToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+	@ManyToMany( cascade = {CascadeType.PERSIST, CascadeType.MERGE},fetch = FetchType.EAGER)//
 	@JoinTable(name = "users_roles",
 			joinColumns = @JoinColumn(name = "user_id"),
 			inverseJoinColumns = @JoinColumn(name = "role_id"))

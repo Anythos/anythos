@@ -22,6 +22,7 @@ import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 
+import javax.transaction.Transactional;
 import java.util.List;
 import java.util.Set;
 
@@ -68,11 +69,15 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     }
 
     @EventListener(ApplicationReadyEvent.class)
+    @Transactional
     public void get() {
-        User admin = new User(null, "bartek", passwordEncoder().encode("bartek"), true, Set.of(new Role("ADMIN"),new Role("MOD")));
+       // Role role = new Role(1, "")
+        User admin = new User(null, "bartek", passwordEncoder().encode("bartek"), true, Set.of(new Role("ADMIN"), new Role("MOD")));
         User user = new User(null, "user", passwordEncoder().encode("user"), true, Set.of(new Role("USER")));
-        userRepository.saveAll(List.of(admin,user));
-       // System.out.println(admin.getRoles());
+        //User user1 = new User(null, "user1", passwordEncoder().encode("user1"), true, Set.of(new Role("USER")));
+
+        userRepository.saveAll(List.of(admin, user));
+        // System.out.println(admin.getRoles());
 
 //		User user = new User("kamil", passwordEncoder().encode("kamil"), true);
 //		userRepository.save(user);

@@ -20,7 +20,6 @@ public class AuthManager implements AuthenticationManager {
     private final PasswordEncoder passwordEncoder;
 
 
-
     @Override
     public Authentication authenticate(Authentication auth) throws AuthenticationException {
         System.out.println("auth manager");
@@ -32,7 +31,7 @@ public class AuthManager implements AuthenticationManager {
         if (!details.isEnabled()) {
             throw new DisabledException(auth.getPrincipal().toString());
         }
-        if(!details.isAccountNonLocked()){
+        if (!details.isAccountNonLocked()) {
             throw new LockedException(BLOCKED);
         }
         if (auth.getPrincipal() == null || auth.getCredentials() == null) {
@@ -44,7 +43,7 @@ public class AuthManager implements AuthenticationManager {
         return new UsernamePasswordAuthenticationToken(details.getUsername(), null, details.getAuthorities());
     }
 
-    private Details loadUser(Authentication authentication){
+    private Details loadUser(Authentication authentication) {
         return userDetailsService.loadUserByUsername(authentication.getPrincipal().toString());
     }
 }
