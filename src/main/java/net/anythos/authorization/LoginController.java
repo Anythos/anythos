@@ -13,7 +13,7 @@ import javax.validation.Valid;
 @RequestMapping("/anythos")
 public class LoginController {
 
-    @CrossOrigin(origins = "http://localhost:8080")
+    @CrossOrigin(origins = "http://localhost:3000")
     @PostMapping("/login")
     public ResponseEntity<Void> loginUser(@RequestBody @Valid CredentialsDTO credentialsDTO,
                                           HttpServletRequest request) {
