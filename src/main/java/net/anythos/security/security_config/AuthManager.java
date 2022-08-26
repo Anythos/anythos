@@ -22,11 +22,7 @@ public class AuthManager implements AuthenticationManager {
 
     @Override
     public Authentication authenticate(Authentication auth) throws AuthenticationException {
-        System.out.println("auth manager");
         Details details = loadUser(auth);
-        System.out.println("DETAILS: " + details.getUsername() + " " + details.getPassword());
-        System.out.println("principal: " + auth.getPrincipal().toString());
-        System.out.println("getCredentials: " + auth.getCredentials().toString());
         //order https://docs.spring.io/spring-security/site/docs/current/api/org/springframework/security/authentication/AuthenticationManager.html
         if (!details.isEnabled()) {
             throw new DisabledException(auth.getPrincipal().toString());

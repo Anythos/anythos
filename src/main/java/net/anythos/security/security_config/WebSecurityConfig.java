@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import net.anythos.security.jwt.TokenAuthorizationFilter;
 import net.anythos.user.entity.Role;
 import net.anythos.user.entity.User;
+import net.anythos.user.repository.RoleRepository;
 import net.anythos.user.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
@@ -23,8 +24,11 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 
 import javax.transaction.Transactional;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Slf4j
 @Configuration
@@ -39,6 +43,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     @Value("${jwt.secret}")
     private String secret;
     private final UserRepository userRepository;
+    private final RoleRepository roleRepository;
 
 
     @Override
@@ -71,12 +76,19 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     @EventListener(ApplicationReadyEvent.class)
     @Transactional
     public void get() {
-       // Role role = new Role(1, "")
-        User admin = new User(null, "bartek", passwordEncoder().encode("bartek"), true, Set.of(new Role("ADMIN"), new Role("MOD")));
-        User user = new User(null, "user", passwordEncoder().encode("user"), true, Set.of(new Role("USER")));
-        //User user1 = new User(null, "user1", passwordEncoder().encode("user1"), true, Set.of(new Role("USER")));
+        User admin = new User(null, "bartek", passwordEncoder().encode("bartek"), true, null); //Set.of(new Role("ADMIN"), new Role("MOD"))
+        User user = new User(null, "user", passwordEncoder().encode("user"), true, null);
+//        roleRepository.save(new Role("ADMIN"));
+//        roleRepository.save(new Role("USER"));
+//        roleRepository.save(new Role("MANAGER"));
+        admin.setRoles(Stream.of(roleRepository.findRoleByName("ADMIN")).collect(Collectors.toSet()));
+        user.setRoles(Set.of(roleRepository.findRoleByName("USER")));
+        admin.addRole(roleRepository.findRoleByName("MANAGER"));
 
         userRepository.saveAll(List.of(admin, user));
+
+//        ********************************
+        //User user1 = new User(null, "user1", passwordEncoder().encode("user1"), true, Set.of(new Role("USER")));
         // System.out.println(admin.getRoles());
 
 //		User user = new User("kamil", passwordEncoder().encode("kamil"), true);
