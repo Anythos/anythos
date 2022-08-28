@@ -1,7 +1,6 @@
 package net.anythos.security.security_config;
 
-import lombok.AllArgsConstructor;
-import org.springframework.context.annotation.Lazy;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.*;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
@@ -9,16 +8,16 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 @Component
-@AllArgsConstructor(onConstructor = @__(@Lazy))
 public class AuthManager implements AuthenticationManager {
 
     private static final String MISS_AUTH_PARAMS = "You miss authentication params!";
     private static final String PASSWORD_NOT_MATCH = "Password not match!";
     private static final String BLOCKED = "User is blocked!";
 
-    private final DetailsService userDetailsService;
-    private final PasswordEncoder passwordEncoder;
-
+    @Autowired
+    private DetailsService userDetailsService;
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     @Override
     public Authentication authenticate(Authentication auth) throws AuthenticationException {
