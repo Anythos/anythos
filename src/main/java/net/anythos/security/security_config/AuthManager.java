@@ -21,6 +21,9 @@ public class AuthManager implements AuthenticationManager {
 
     @Override
     public Authentication authenticate(Authentication auth) throws AuthenticationException {
+        if (auth.getPrincipal() == null || auth.getCredentials() == null) {
+            throw new BadCredentialsException(MISS_AUTH_PARAMS);
+        }
         Details details = loadUser(auth);
         //order https://docs.spring.io/spring-security/site/docs/current/api/org/springframework/security/authentication/AuthenticationManager.html
         if (!details.isEnabled()) {
@@ -28,9 +31,6 @@ public class AuthManager implements AuthenticationManager {
         }
         if (!details.isAccountNonLocked()) {
             throw new LockedException(BLOCKED);
-        }
-        if (auth.getPrincipal() == null || auth.getCredentials() == null) {
-            throw new BadCredentialsException(MISS_AUTH_PARAMS);
         }
         if (!passwordEncoder.matches(auth.getCredentials().toString(), details.getPassword())) {
             throw new BadCredentialsException(PASSWORD_NOT_MATCH);

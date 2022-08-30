@@ -39,9 +39,7 @@ import java.util.stream.Stream;
 @EnableGlobalMethodSecurity(prePostEnabled = true, securedEnabled = true, jsr250Enabled = true)
 @RequiredArgsConstructor(onConstructor = @__(@Lazy))
 public class WebSecurityConfig {
-    private static final String EXCEPTION_MESSAGE = "Error while configuring HttpSecurity class, exception message: %s";
-
-    //@Autowired
+    //    private static final String EXCEPTION_MESSAGE = "Error while configuring HttpSecurity class, exception message: %s";
     private final AuthenticationFilter authenticationFilter;
     private final DetailsService detailsService;
     @Value("${jwt.secret}")
@@ -65,19 +63,26 @@ public class WebSecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
 
         httpSecurity
+                .csrf().disable()
+                .cors()
+                .and()
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilter(authenticationFilter)
                 .addFilter(new TokenAuthorizationFilter(new AuthManager(), detailsService, secret))
                 .exceptionHandling()
-                .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED));
+                .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED))
+                .and()
+                .requestMatchers(requestMatchers->requestMatchers.antMatchers("/anythos/**"))
+                .authorizeRequests(authorizeRequests ->
+                        authorizeRequests
+//                                .antMatchers( "/anythos/user/**", "/anythos/admin/**").hasRole("ADMIN")
+//                                .antMatchers("/anythos/user/**").hasRole("USER")
+                                .antMatchers( "/anythos/admin/**").hasRole("ADMIN")
+                                .antMatchers("/anythos/user/**").hasRole("USER")
+                );
+                //.formLogin().loginPage("/anythos/login").permitAll();
 
-        try {
-            httpSecurity.csrf().disable();
-            httpSecurity.cors();
-        } catch (Exception exception) {
-            log.warn(EXCEPTION_MESSAGE.formatted(exception.getMessage()));
-        }
         return httpSecurity.build();
     }
 
