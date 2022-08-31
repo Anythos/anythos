@@ -94,8 +94,8 @@ public class WebSecurityConfig {
     @EventListener(ApplicationReadyEvent.class)
     @Transactional
     public void get() {
-        User admin = new User(null, "bartek", passwordEncoder().encode("bartek"), true, null); //Set.of(new Role("ADMIN"), new Role("MOD"))
-        User user = new User(null, "user", passwordEncoder().encode("user"), true, null);
+        User admin = new User(null, "bartek", passwordEncoder().encode("bartek"), true,null, null); //Set.of(new Role("ADMIN"), new Role("MOD"))
+        User user = new User(null, "user", passwordEncoder().encode("user"), true,null, null);
 //        roleRepository.save(new Role("ADMIN"));
 //        roleRepository.save(new Role("USER"));
 //        roleRepository.save(new Role("MANAGER"));

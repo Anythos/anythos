@@ -1,15 +1,13 @@
 package net.anythos.user.entity;
 
 import lombok.*;
-import org.assertj.core.util.diff.Delta;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
+import net.anythos.security.refreshtoken.RefreshToken;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
-import java.util.*;
+import java.util.HashSet;
+import java.util.Set;
 
 @Table(name = "users")
 @Getter
@@ -35,13 +33,17 @@ public class User {
     @NotNull
     private boolean active;
 
+    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "refreshToken_id", referencedColumnName = "id")
+    private RefreshToken refreshToken;
+
     @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE}, fetch = FetchType.EAGER)//
     @JoinTable(name = "users_roles",
             joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "role_id"))
     private Set<Role> roles = new HashSet<>();
 
-    public void addRole(Role role){
+    public void addRole(Role role) {
         roles.add(role);
     }
 }

@@ -56,6 +56,7 @@ public class TokenAuthorizationFilter extends BasicAuthenticationFilter {
                             userDetails.getAuthorities());
                 }
             } catch (TokenExpiredException ex) {
+                String requestURL = request.getRequestURL().toString();
                 throw new TokenExpiredException("Token expired on " + ex.getExpiredOn(), ex.getExpiredOn());
             }
 
