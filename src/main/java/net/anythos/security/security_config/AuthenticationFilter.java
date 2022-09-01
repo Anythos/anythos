@@ -42,7 +42,7 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
         }
     }
 
-    private Authentication authenticate(UsernamePasswordAuthenticationToken token){
+    private Authentication authenticate(UsernamePasswordAuthenticationToken token) {
         return getAuthenticationManager().authenticate(token);
     }
 

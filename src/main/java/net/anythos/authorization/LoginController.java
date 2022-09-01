@@ -2,7 +2,6 @@ package net.anythos.authorization;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
-import com.auth0.jwt.exceptions.TokenExpiredException;
 import lombok.extern.slf4j.Slf4j;
 import net.anythos.security.refreshtoken.RefreshToken;
 import net.anythos.security.refreshtoken.RefreshTokenRepository;
@@ -13,19 +12,12 @@ import net.anythos.user.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.function.ServerRequest;
 
 import javax.persistence.EntityNotFoundException;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
-import java.time.Instant;
 import java.util.Date;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.stream.Stream;
 
 @Slf4j
 @RestController
@@ -38,7 +30,7 @@ public class LoginController {
     private long expirationTime;
     private static final String TOKEN_HEADER_NAME = "Authorization";
     private static final String REFRESHTOKEN_HEADER_NAME = "RefreshToken";
-    private static final String HEADER_VALUE = "Bearer %s";
+    private static final String TOKEN_HEADER_PREFIX = "Bearer %s";
     private RefreshTokenRepository refreshTokenRepository;
     private RefreshTokenService refreshTokenService;
     private UserRepository userRepository;
@@ -58,23 +50,30 @@ public class LoginController {
     @PostMapping("/refreshtoken")
     public ResponseEntity<?> refreshtoken(@RequestHeader String refreshToken) {
 
+        HttpHeaders responseHeaders = getNewTokens(refreshToken);
+        return ResponseEntity.ok().headers(responseHeaders).body("Response Headers");
+
+    }
+
+    private HttpHeaders getNewTokens(String oldRefreshToken) {
+        RefreshToken newRefreshToken1 = refreshTokenRepository.findByToken(oldRefreshToken)
+                .orElseThrow(()->new EntityNotFoundException("RefreshToken not found."));
+
+        refreshTokenService.verifyRefreshToken(newRefreshToken1);
+
+        User user = newRefreshToken1.getUser();
+        String userName = user.getUsername();
         HttpHeaders responseHeaders = new HttpHeaders();
-        RefreshToken refreshToken1 = refreshTokenRepository.findByToken(refreshToken).orElseThrow();
-        Instant expDate = refreshToken1.getExpiryDate();
 
-        if (Objects.equals(refreshToken1, refreshTokenService.verifyRefreshToken(refreshToken1))) {
-            User user = refreshToken1.getUser();
-            responseHeaders.add(TOKEN_HEADER_NAME, HEADER_VALUE.formatted(createToken(user.getUsername())));
-            String newRefreshToken = refreshTokenService.createRefreshToken(
-                    userRepository.findByUsername(
-                            user.getUsername()).get().getId()).getToken();
-            responseHeaders.add(REFRESHTOKEN_HEADER_NAME, newRefreshToken);
-            String token = createToken(user.getUsername());
-            return ResponseEntity.ok().headers(responseHeaders).body("Response Headers");
-        }
+        responseHeaders.add(
+                TOKEN_HEADER_NAME,
+                TOKEN_HEADER_PREFIX.formatted(
+                        createToken(userName)));
 
+        String newRefreshToken = refreshTokenService.createRefreshToken(userName).getToken();
+        responseHeaders.add(REFRESHTOKEN_HEADER_NAME, newRefreshToken);
 
-        return null;
+        return responseHeaders;
     }
 
     private String createToken(String userName) {

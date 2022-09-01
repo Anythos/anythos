@@ -6,16 +6,19 @@ import net.anythos.user.entity.User;
 
 import javax.persistence.*;
 import java.time.Instant;
+
 @Getter
 @Setter
-@Entity(name = "refreshtoken")
+@Entity
+@Table(name = "refreshtoken")
 public class RefreshToken {
+
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    @Column(name = "id", nullable = false)
     private Long id;
 
-    @OneToOne(mappedBy = "refreshToken")
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
     private User user;
 
     @Column(nullable = false, unique = true)

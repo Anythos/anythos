@@ -20,8 +20,8 @@ import java.io.IOException;
 @Slf4j
 public class TokenAuthorizationFilter extends BasicAuthenticationFilter {
 
-    private static final String TOKEN_HEADER = "Authorization";
-    private static final String TOKEN_PREFIX = "Bearer ";
+    private static final String TOKEN_HEADER_NAME = "Authorization";
+    private static final String TOKEN_HEADER_PREFIX = "Bearer ";
     private static final String EMPTY_STRING = "";
     private final DetailsService userDetailsService;
     private final String secret;
@@ -46,8 +46,8 @@ public class TokenAuthorizationFilter extends BasicAuthenticationFilter {
     }
 
     private UsernamePasswordAuthenticationToken getAuthenticationToken(HttpServletRequest request) {
-        var token = request.getHeader(TOKEN_HEADER);
-        if (token != null && token.startsWith(TOKEN_PREFIX)) {
+        var token = request.getHeader(TOKEN_HEADER_NAME);
+        if (token != null && token.startsWith(TOKEN_HEADER_PREFIX)) {
             try {
                 var userName = getName(token);
                 if (userName != null) {
@@ -56,8 +56,7 @@ public class TokenAuthorizationFilter extends BasicAuthenticationFilter {
                             userDetails.getAuthorities());
                 }
             } catch (TokenExpiredException ex) {
-                String requestURL = request.getRequestURL().toString();
-                throw new TokenExpiredException("Token expired on " + ex.getExpiredOn(), ex.getExpiredOn());
+                //throw new TokenExpiredException("Token expired on " + ex.getExpiredOn(), ex.getExpiredOn());
             }
 
         }
@@ -71,7 +70,7 @@ public class TokenAuthorizationFilter extends BasicAuthenticationFilter {
     private String getName(String token) {
         return JWT.require(Algorithm.HMAC256(secret))
                 .build()
-                .verify(token.replace(TOKEN_PREFIX, EMPTY_STRING))
+                .verify(token.replace(TOKEN_HEADER_PREFIX, EMPTY_STRING))
                 .getSubject();
     }
 }
