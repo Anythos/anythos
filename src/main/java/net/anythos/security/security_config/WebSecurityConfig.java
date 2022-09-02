@@ -40,10 +40,11 @@ import java.util.stream.Stream;
 @RequiredArgsConstructor(onConstructor = @__(@Lazy))
 public class WebSecurityConfig {
     //    private static final String EXCEPTION_MESSAGE = "Error while configuring HttpSecurity class, exception message: %s";
-    private final AuthenticationFilter authenticationFilter;
-    private final DetailsService detailsService;
     @Value("${jwt.secret}")
     private String secret;
+    private final AuthenticationFilter authenticationFilter;
+    private final DetailsService detailsService;
+    private final AuthEntryPointJwt authEntryPointJwt;
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
 
@@ -71,7 +72,7 @@ public class WebSecurityConfig {
                 .addFilter(authenticationFilter)
                 .addFilter(new TokenAuthorizationFilter(new AuthManager(), detailsService, secret))
                 .exceptionHandling()
-                .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED))
+                .authenticationEntryPoint(authEntryPointJwt)
                 .and()
                 .requestMatchers(requestMatchers->requestMatchers.antMatchers("/anythos/**"))
                 .authorizeRequests(authorizeRequests ->
