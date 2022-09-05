@@ -45,7 +45,7 @@ public class TokenAuthorizationFilter extends BasicAuthenticationFilter {
         filterChain.doFilter(request, response);
     }
 
-    private UsernamePasswordAuthenticationToken getAuthenticationToken(HttpServletRequest request) {
+    private UsernamePasswordAuthenticationToken getAuthenticationToken(HttpServletRequest request) throws ServletException {
         var token = request.getHeader(TOKEN_HEADER_NAME);
         if (token != null && token.startsWith(TOKEN_HEADER_PREFIX)) {
             try {
@@ -56,6 +56,7 @@ public class TokenAuthorizationFilter extends BasicAuthenticationFilter {
                             userDetails.getAuthorities());
                 }
             } catch (TokenExpiredException ex) {
+                request.setAttribute("JwtExpired", ex.getMessage());
                 //throw new TokenExpiredException("Token expired on " + ex.getExpiredOn(), ex.getExpiredOn());
             }
 
