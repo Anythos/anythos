@@ -12,7 +12,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.context.event.EventListener;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -20,7 +19,6 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -40,10 +38,11 @@ import java.util.stream.Stream;
 @RequiredArgsConstructor(onConstructor = @__(@Lazy))
 public class WebSecurityConfig {
     //    private static final String EXCEPTION_MESSAGE = "Error while configuring HttpSecurity class, exception message: %s";
-    private final AuthenticationFilter authenticationFilter;
-    private final DetailsService detailsService;
     @Value("${jwt.secret}")
     private String secret;
+    private final AuthenticationFilter authenticationFilter;
+    private final DetailsService detailsService;
+    private final AuthEntryPointJwt authEntryPointJwt;
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
 
@@ -71,17 +70,17 @@ public class WebSecurityConfig {
                 .addFilter(authenticationFilter)
                 .addFilter(new TokenAuthorizationFilter(new AuthManager(), detailsService, secret))
                 .exceptionHandling()
-                .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED))
+                .authenticationEntryPoint(authEntryPointJwt)
                 .and()
-                .requestMatchers(requestMatchers->requestMatchers.antMatchers("/anythos/**"))
+                .requestMatchers(requestMatchers -> requestMatchers.antMatchers("/anythos/**"))
                 .authorizeRequests(authorizeRequests ->
-                        authorizeRequests
+                                authorizeRequests
 //                                .antMatchers( "/anythos/user/**", "/anythos/admin/**").hasRole("ADMIN")
 //                                .antMatchers("/anythos/user/**").hasRole("USER")
-                                .antMatchers( "/anythos/admin/**").hasRole("ADMIN")
-                                .antMatchers("/anythos/user/**").hasRole("USER")
+                                        .antMatchers("/anythos/admin/**").hasRole("ADMIN")
+                                        .antMatchers("/anythos/user/**").hasRole("USER")
                 );
-                //.formLogin().loginPage("/anythos/login").permitAll();
+        //.formLogin().loginPage("/anythos/login").permitAll();
 
         return httpSecurity.build();
     }
@@ -94,8 +93,8 @@ public class WebSecurityConfig {
     @EventListener(ApplicationReadyEvent.class)
     @Transactional
     public void get() {
-        User admin = new User(null, "bartek", passwordEncoder().encode("bartek"), true, null); //Set.of(new Role("ADMIN"), new Role("MOD"))
-        User user = new User(null, "user", passwordEncoder().encode("user"), true, null);
+        User admin = new User(null, "bartek", passwordEncoder().encode("bartek"), true, null, null); //Set.of(new Role("ADMIN"), new Role("MOD"))
+        User user = new User(null, "user", passwordEncoder().encode("user"), true, null, null);
 //        roleRepository.save(new Role("ADMIN"));
 //        roleRepository.save(new Role("USER"));
 //        roleRepository.save(new Role("MANAGER"));
