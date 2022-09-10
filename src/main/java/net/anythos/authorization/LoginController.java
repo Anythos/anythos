@@ -33,12 +33,10 @@ public class LoginController {
     private static final String TOKEN_HEADER_PREFIX = "Bearer %s";
     private RefreshTokenRepository refreshTokenRepository;
     private RefreshTokenService refreshTokenService;
-    private UserRepository userRepository;
 
-    public LoginController(RefreshTokenRepository refreshTokenRepository, RefreshTokenService refreshTokenService, UserRepository userRepository) {
+    public LoginController(RefreshTokenRepository refreshTokenRepository, RefreshTokenService refreshTokenService) {
         this.refreshTokenRepository = refreshTokenRepository;
         this.refreshTokenService = refreshTokenService;
-        this.userRepository = userRepository;
     }
 
     @PostMapping("/login")
@@ -56,12 +54,12 @@ public class LoginController {
     }
 
     private HttpHeaders getNewTokens(String oldRefreshToken) {
-        RefreshToken newRefreshToken1 = refreshTokenRepository.findByToken(oldRefreshToken)
-                .orElseThrow(()->new EntityNotFoundException("RefreshToken not found."));
+        RefreshToken refreshToken = refreshTokenRepository.findByToken(oldRefreshToken)
+                .orElseThrow(() -> new EntityNotFoundException("RefreshToken not found."));
 
-        refreshTokenService.verifyRefreshToken(newRefreshToken1);
+        refreshTokenService.verifyRefreshToken(refreshToken);
 
-        User user = newRefreshToken1.getUser();
+        User user = refreshToken.getUser();
         String userName = user.getUsername();
         HttpHeaders responseHeaders = new HttpHeaders();
 
