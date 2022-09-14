@@ -2,28 +2,22 @@ package net.anythos.user.controller;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import net.anythos.user.entity.User;
+import net.anythos.user.entity.UserDto;
 import net.anythos.user.service.UserService;
-import org.apache.tomcat.util.descriptor.web.ContextHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.annotation.Secured;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
-import javax.annotation.security.RolesAllowed;
-import javax.naming.Context;
 import javax.validation.Valid;
 import java.net.URI;
-import java.util.Collection;
 import java.util.List;
 
 @RestController
 @CrossOrigin(origins = "http://localhost:3000")
+@SecurityRequirement(name = "bearerAuth")
 @RequestMapping("/anythos")
 public class UserApi {
 
@@ -49,13 +43,6 @@ public class UserApi {
     @GetMapping("/user/test")
     public String userTest() {
         return "User test";
-    }
-
-    @PutMapping("admin/users/add")
-    public ResponseEntity<?> createUser(@RequestBody @Valid User user) {
-        User newUser = userService.addUser(user);
-        URI uri = URI.create("/users/add/" + newUser.getId());
-        return ResponseEntity.created(uri).body(newUser);
     }
 
     @GetMapping("/admin/token")

@@ -2,7 +2,9 @@ package net.anythos.security.security_config;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import net.anythos.employee.entity.Employee;
 import net.anythos.security.jwt.TokenAuthorizationFilter;
+import net.anythos.user.entity.Role;
 import net.anythos.user.entity.User;
 import net.anythos.user.repository.RoleRepository;
 import net.anythos.user.repository.UserRepository;
@@ -93,15 +95,14 @@ public class WebSecurityConfig {
     @EventListener(ApplicationReadyEvent.class)
     @Transactional
     public void get() {
-        User admin = new User(null, "bartek", passwordEncoder().encode("bartek"), true, null, null); //Set.of(new Role("ADMIN"), new Role("MOD"))
-        User user = new User(null, "user", passwordEncoder().encode("user"), true, null, null);
+        User admin = new User(null, "bartek", passwordEncoder().encode("bartek"), true, null, new Employee(), null); //Set.of(new Role("ADMIN"), new Role("MOD"))
+        User user = new User(null, "user", passwordEncoder().encode("user"), true, null, new Employee(), null);
 //        roleRepository.save(new Role("ADMIN"));
 //        roleRepository.save(new Role("USER"));
 //        roleRepository.save(new Role("MANAGER"));
         admin.setRoles(Stream.of(roleRepository.findRoleByName("ADMIN")).collect(Collectors.toSet()));
         user.setRoles(Set.of(roleRepository.findRoleByName("USER")));
         admin.addRole(roleRepository.findRoleByName("MANAGER"));
-
         userRepository.saveAll(List.of(admin, user));
 
 //        ********************************
