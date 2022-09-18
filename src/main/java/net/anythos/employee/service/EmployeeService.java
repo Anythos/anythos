@@ -13,9 +13,11 @@ import org.apache.logging.log4j.Logger;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityNotFoundException;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static net.anythos.employee.entity.EmplloyeeMapper.mapToEmployee;
@@ -34,31 +36,56 @@ public class EmployeeService {
     private final Logger logger = LogManager.getLogger(getClass());
 
     public EmployeeDto createEmployee(EmployeeDto employeeDto) {
+        Employee employee = prepareEmployee(employeeDto, passwordEncoder);
+        employee = employeeRepository.save(employee);
+        return mapToEmployeeDtoWithUser(employee, employee.getUser());
+    }
+
+    private Employee prepareEmployee(EmployeeDto employeeDto, PasswordEncoder encoder) {
         UserDto userDto = employeeDto.getUserDto();
-        userDto.setPassword(passwordEncoder.encode(userDto.getPassword()));
-        userDto.setRoles(roleRepository.findByNameIn(userDto.getRoles().stream().map(Role::getName).collect(Collectors.toSet())));
+        userDto.setPassword(encoder.encode(userDto.getPassword()));
+        userDto.setRoles(getRolesByNemes(userDto.getRoles()));
         User user = mapToUser(userDto);
         Employee employee = mapToEmployee(employeeDto);
         employee.setUser(user);
-        employee = employeeRepository.save(employee);
+        return employee;
+    }
 
-        employeeDto = mapToEmployeeDto(employee);
-        employeeDto.setUserDto(mapToUserDto(employee.getUser()));
-        return employeeDto;
+    private Set<Role> getRolesByNemes(Set<Role> roles) {
+        return roleRepository.findByNameIn(roles.stream()
+                .map(Role::getName)
+                .collect(Collectors.toSet()));
     }
 
     public EmployeeDto getEmplyeeById(Long id) {
         Employee employee = employeeRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Not found employee by id: " + id));
         User user = employee.getUser();
-        logger.info("found");
         EmployeeDto employeeDto = mapToEmployeeDto(employee);
         employeeDto.setUserDto(mapToUserDto(user));
         return employeeDto;
     }
 
-    public List<EmployeeDto> getEmployee() {
+    public List<EmployeeDto> getEmployees() {
         List<Employee> employees = employeeRepository.findAll();
-        return employees.stream().map(employee -> mapToEmployeeDtoWithUser(employee, employee.getUser())).toList(); //.setUserDto(mapToUserDto(employee.getUser()))
+        return employees.stream()
+                .map(employee -> mapToEmployeeDtoWithUser(employee, employee.getUser()))
+                .toList(); //.setUserDto(mapToUserDto(employee.getUser()))
+    }
+
+    public void deleteEmployee(Long id) {
+        if(employeeRepository.existsById(id))
+            throw new EntityNotFoundException("Not found employee by id: " + id);
+        employeeRepository.deleteById(id);
+    }
+
+    @Transactional
+    public EmployeeDto update(long id, EmployeeDto employeeDto) {
+        Employee employee = employeeRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Not found employee by id: " + id));
+        employeeDto.setId(employee.getId());
+        employee = mapToEmployee(employeeDto);
+        employee = employeeRepository.save(employee);
+        return mapToEmployeeDto(employee);
     }
 }

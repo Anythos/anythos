@@ -10,7 +10,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 import java.io.Serial;
 import java.util.Collection;
 import java.util.Set;
-import java.util.stream.Stream;
 
 @Builder
 public class Details implements UserDetails {

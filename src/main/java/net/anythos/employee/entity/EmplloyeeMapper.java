@@ -3,6 +3,7 @@ package net.anythos.employee.entity;
 public class EmplloyeeMapper {
     public static Employee mapToEmployee(EmployeeDto employeeDto) {
         Employee employee = Employee.builder()
+                .id(employeeDto.getId())
                 .systemEmployeeId(employeeDto.getSystemEmployeeId())
                 .firstName(employeeDto.getFirstName())
                 .lastName(employeeDto.getLastName())

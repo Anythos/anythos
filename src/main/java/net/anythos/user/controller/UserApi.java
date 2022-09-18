@@ -4,15 +4,12 @@ import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import net.anythos.user.entity.User;
-import net.anythos.user.entity.UserDto;
 import net.anythos.user.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-import javax.validation.Valid;
-import java.net.URI;
 import java.util.List;
 
 @RestController
@@ -45,8 +42,11 @@ public class UserApi {
         return "User test";
     }
 
-    @GetMapping("/admin/token")
-    public String testToken(@RequestHeader(AUTHORIZATION_HEADER) String token) {
+    @GetMapping("/admin/userinfo")
+    public String testToken(@RequestHeader(AUTHORIZATION_HEADER) String token, @AuthenticationPrincipal String user) { //, @AuthenticationPrincipal UsernamePasswordAuthenticationToken user
+//        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+//        String userName = authentication.getPrincipal().toString();
+//User user = (User) authentication == null ? null : (User) authentication.getPrincipal();
 
         String name = JWT.require(Algorithm.HMAC256(secret))
                 .build()
@@ -64,10 +64,14 @@ public class UserApi {
                 .build()
                 .verify(token.replace(TOKEN_PREFIX, TOKEN_REPLACEMENT))
                 .getSignature();
-        return "name " + name + System.lineSeparator() +
-                "payload: " + payload + System.lineSeparator() +
-                "token: " + token2 + System.lineSeparator() +
-                "signature: " + signature;
+//        user.getPrincipal() + user.getCredentials() + user.getAuthorities() + get
+
+//        return "name " + name + System.lineSeparator() +
+//                "payload: " + payload + System.lineSeparator() +
+//                "token: " + token2 + System.lineSeparator() +
+//                "signature: " + signature;
+
+        return user;
     }
 
     // test permissions

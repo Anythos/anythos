@@ -25,11 +25,9 @@ public class AuthenticationSuccessHandler extends SimpleUrlAuthenticationSuccess
     @Value("${jwt.expirationTime}")
     private long expirationTime;
     private RefreshTokenService refreshTokenService;
-    private UserRepository userRepository;
 
-    public AuthenticationSuccessHandler(RefreshTokenService refreshTokenService, UserRepository userRepository) {
+    public AuthenticationSuccessHandler(RefreshTokenService refreshTokenService) {
         this.refreshTokenService = refreshTokenService;
-        this.userRepository = userRepository;
     }
 
     @Override

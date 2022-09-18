@@ -35,13 +35,27 @@ public class EmployeeController {
     @GetMapping("/admin/employees")
     @ResponseStatus(HttpStatus.OK)
     public List<EmployeeDto> getEmployee() {
-        return employeeService.getEmployee();
+        return employeeService.getEmployees();
+    }
+
+    @DeleteMapping("/admin/employees/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteEmployeeById(@PathVariable long id){
+        employeeService.deleteEmployee( id);
     }
 
     @GetMapping("/admin/employees/{id}")
     @ResponseStatus(HttpStatus.OK)
-    public EmployeeDto getEmplyeeById(@PathVariable Long id) {
+    public EmployeeDto getEmployeeById(@PathVariable long id) {
         return employeeService.getEmplyeeById(id);
     }
+
+    @PutMapping("/admin/employee/{id}")
+    @ResponseStatus(HttpStatus.OK)
+    public EmployeeDto updateEmployee(@PathVariable long id, @RequestBody EmployeeDto employeeDto)
+    {
+        return employeeService.update(id, employeeDto);
+    }
+
 
 }
